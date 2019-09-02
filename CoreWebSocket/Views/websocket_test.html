@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+    <input type="text" placeholder="输入要发送的消息" id="sendMsg" />
+    <textarea id="msgArea" cols="50" rows="30"></textarea>
+    <button id="btnConnect">开始连接</button>
+    <button id="btnClose">关闭连接</button>
+    <button id="btnSend">发送</button>
+</body>
+</html>
+<script src="jquery/dist/jquery.js"></script>
+<script>
+
+    var socket;
+    var uri = 'ws://127.0.0.1:5000/ws?clientid=192.168.6.18&groupid=usquote';
+    var output;
+
+    $(function () {
+
+        $('#btnConnect').click(function () {
+            socket = new WebSocket(uri);
+            socket.binaryType = 'arraybuffer'; // 指定WebSocket接受ArrayBuffer实例作为参数
+            doConnect();
+        })
+
+        $('#btnSend').click(function () {
+
+            if (!socket || socket.readyState != WebSocket.OPEN) {
+                alert("socket not connected");
+            }
+
+            var msg = $('#sendMsg').val();
+            if (msg) {
+                console.log('send' + msg);
+                socket.send(msg);
+            }
+        })
+
+        $('#btnClose').click(function () {
+            if (!socket || socket.readyState != WebSocket.OPEN) {
+                alert("socket not connected");
+            }
+
+            socket.close();
+        })
+
+    });
+
+    //function load_init() {
+    //    socket = new WebSocket(uri);
+
+    //    setTimeout(function () {
+    //        console.log(socket.readyState);
+    //        if (socket.readyState === 1) {
+    //            socket.send(JSON.stringify(text));//发送
+    //            //doSend();
+    //        }
+
+    //    }, 1000);
+
+    //    //doSend();
+
+    //}
+    //接受
+    function write(s) {
+
+        var msg = $('#msgArea').val();
+        $('#msgArea').val(msg + '\r\n' + s);
+        //console.log(s);
+
+        //if (socket.readyState === 1) {
+        //    socket.send(JSON.stringify(text));
+        //} else {
+        //    //do something
+        //}
+    }
+
+    function doConnect() {
+        //alert(2);
+        socket.onopen = function (e) { write("opened " + uri); };
+        socket.onclose = function (e) { doConnect(); };
+        socket.onmessage = function (e) { console.log(e.data); write(e.data); };
+        socket.onerror = function (e) { console.log(e); write("Error: " + e.data); };
+    }
+
+    function doSend() {
+
+        //添加事件监听
+        socket.addEventListener('open', function () {
+            //write("Sending: " + text);
+            socket.send(JSON.stringify(text));
+        });
+
+    }
+    function onInit() {
+
+        // output = document.getElementById("output");
+        doConnect();
+    }
+
+    function doclose() {
+        socket.onclose = function (e) {
+            console.log(e);
+            socket.close(); //关闭TCP连接
+        }
+    }
+   // window.onload = onInit
+</script>
